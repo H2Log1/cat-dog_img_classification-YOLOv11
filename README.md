@@ -111,7 +111,7 @@
 
 感谢 [**AutoDL 算力云平台**](https://www.autodl.com/home) 为本项目提供高性能计算资源，使得 YOLOv11 模型的训练与多模型融合推理得以顺利完成。  
 感谢 [**Ultralytics 团队**](https://www.ultralytics.com/) 开源的 YOLO 框架与持续更新，为本项目提供了坚实的技术基础。  
-此外，感谢开源社区中众多开发者和研究者，他们在 PyTorch、OpenCV、Matplotlib 等框架中的贡献，为本项目的实现提供了关键支持。  
+感谢开源社区中众多开发者和研究者，他们在 PyTorch、OpenCV、Matplotlib 等框架中的贡献，为本项目的实现提供了关键支持。  
 感谢所有在数据采集、标注与实验验证阶段参与协作的同学们，正是他们的努力，使得这项研究工作得以顺利完成。
 
 本项目基于 [MIT License](./LICENSE) 开源发布。  
