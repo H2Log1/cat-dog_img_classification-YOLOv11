@@ -14,19 +14,16 @@ try:
 except ImportError:
     AUGMENT = None
 
-
+# 自动增强少数类样本（复制图像与标签），可用于 train 或 valid 集。
+# Args:
+#     images_path (str): 图像目录路径，例如 "data/train/images"
+#     augment_factor (int): 每个少数类样本复制次数（默认2）
+#     use_aug (bool): 是否使用 Albumentations 图像增强（默认False）
 def balance_dataset(images_path: str, augment_factor: int = 2, use_aug: bool = False):
-    """
-    自动增强少数类样本（复制图像与标签），可用于 train 或 valid 集。
 
-    Args:
-        images_path (str): 图像目录路径，例如 "data/train/images"
-        augment_factor (int): 每个少数类样本复制次数（默认2）
-        use_aug (bool): 是否使用 Albumentations 图像增强（默认False）
-    """
     labels_path = images_path.replace("images", "labels")
     if not os.path.exists(labels_path):
-        print(f"⚠️ 标签目录不存在: {labels_path}")
+        print(f" 标签目录不存在: {labels_path}")
         return
 
     # 统计类别分布
@@ -38,15 +35,15 @@ def balance_dataset(images_path: str, augment_factor: int = 2, use_aug: bool = F
                     cls = int(line.split()[0])
                     counter[cls] += 1
     if not counter:
-        print(f"⚠️ 未检测到标签: {labels_path}")
+        print(f" 未检测到标签: {labels_path}")
         return
 
     avg = sum(counter.values()) / len(counter)
     minor_classes = [c for c, n in counter.items() if n < 0.7 * avg]
 
-    print(f"\n📊 检测到 {len(counter)} 类，平均 {avg:.1f}，少数类: {minor_classes}")
+    print(f"\n 检测到 {len(counter)} 类，平均 {avg:.1f}，少数类: {minor_classes}")
     if not minor_classes:
-        print("✅ 数据集平衡，无需增强。")
+        print(" 数据集平衡，无需增强。")
         return
 
     # 增强过程
@@ -73,4 +70,4 @@ def balance_dataset(images_path: str, augment_factor: int = 2, use_aug: bool = F
                 else:
                     shutil.copy2(img_path, new_img)
 
-    print(f"✅ 已增强 {images_path} 中的少数类样本。\n")
+    print(f" 已增强 {images_path} 中的少数类样本。\n")

@@ -43,23 +43,23 @@ def merge_yolo_datasets(dataset1, dataset2, output_dir="merged_dataset"):
     os.makedirs(output_dir, exist_ok=True)
     subsets = ["train", "valid", "test"]
 
-    # 1️⃣ 读取两个 yaml
+    # 读取两个 yaml
     yaml1 = load_yaml(os.path.join(dataset1, "data.yaml"))
     yaml2 = load_yaml(os.path.join(dataset2, "data.yaml"))
 
-    # 2️⃣ 合并类别列表
+    # 合并类别列表
     all_names = []
     for n in yaml1["names"] + yaml2["names"]:
         if n not in all_names:
             all_names.append(n)
 
-    # 3️⃣ 建立类别映射
+    # 建立类别映射
     id_map_1 = {i: all_names.index(name) for i, name in enumerate(yaml1["names"])}
     id_map_2 = {i: all_names.index(name) for i, name in enumerate(yaml2["names"])}
 
-    # 4️⃣ 合并图像与标签并重映射类别ID
+    # 合并图像与标签并重映射类别ID
     for subset in subsets:
-        print(f"🚀 处理 {subset} ...")
+        print(f"处理 {subset} ...")
         for sub in ["images", "labels"]:
             src1 = os.path.join(dataset1, subset, sub)
             src2 = os.path.join(dataset2, subset, sub)
@@ -72,7 +72,7 @@ def merge_yolo_datasets(dataset1, dataset2, output_dir="merged_dataset"):
                 if os.path.exists(src1): copy_and_remap_labels(src1, dst, id_map_1)
                 if os.path.exists(src2): copy_and_remap_labels(src2, dst, id_map_2)
 
-    # 5️⃣ 写新的 YAML
+    # 写新的 YAML
     merged_yaml = {
         "path": os.path.abspath(output_dir),
         "train": "train/images",
@@ -82,11 +82,10 @@ def merge_yolo_datasets(dataset1, dataset2, output_dir="merged_dataset"):
         "nc": len(all_names)
     }
     save_yaml(os.path.join(output_dir, "data.yaml"), merged_yaml)
-    print(f"✅ 数据集合并完成！新类别数量: {len(all_names)}")
-    print(f"📁 输出目录: {output_dir}")
+    print(f"数据集合并完成！新类别数量: {len(all_names)}")
+    print(f"输出目录: {output_dir}")
 
 if __name__ == "__main__":
-    # 修改成你自己的路径
     dataset1 = "D:\\Codefield\\MyPython\\DeepLearning\\Projects\\FinalProject\\FP_test\\data_full"
     dataset2 = "D:\\Codefield\\MyPython\\DeepLearning\\Projects\\FinalProject\\FP_test\\data_new_add"
     merge_yolo_datasets(dataset1, dataset2)
