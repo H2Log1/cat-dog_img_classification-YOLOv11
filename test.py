@@ -10,11 +10,11 @@ from ultralytics import YOLO
 from torchvision.ops import nms as tv_nms
 import matplotlib.pyplot as plt
 import matplotlib
+import glob
 
 # ==============================
-# 🔧 用户配置区
+# 基本配置
 # ==============================
-
 MODEL_PATHS = [
     "D:\\Codefield\\MyPython\\DeepLearning\\Projects\\FinalProject\\FP_test\\models\\best_4th.pt",
     "D:\\Codefield\\MyPython\\DeepLearning\\Projects\\FinalProject\\FP_test\\models\\best_liu.pt"
@@ -31,12 +31,11 @@ DEVICE = "cuda"
 SAVE_TXT = True
 
 USE_TTA = True
-FUSION_MODE = "wbf"  # "avg" 或 "wbf"
+FUSION_MODE = "wbf"  
 
 # ==============================
-# 工具函数
+# 自定义函数
 # ==============================
-
 def ensure_dir(path): Path(path).mkdir(parents=True, exist_ok=True)
 
 def iou_xyxy(a, b):
@@ -46,8 +45,9 @@ def iou_xyxy(a, b):
     union = (a[2]-a[0])*(a[3]-a[1]) + (b[2]-b[0])*(b[3]-b[1]) - inter
     return inter / union if union > 0 else 0.0
 
+# 同类别框的加权融合
 def weighted_boxes_fusion(boxes_list, scores_list, weights, iou_thr=0.4, power=2.0):
-    """同类别框的加权融合（安全版本）"""
+    
     dets = []
     for m, (b, s) in enumerate(zip(boxes_list, scores_list)):
         if b.size == 0:
@@ -88,8 +88,9 @@ def nms_torch(boxes, scores, iou_thr=0.5):
     b, s = torch.tensor(boxes), torch.tensor(scores)
     return tv_nms(b, s, iou_thr).cpu().numpy()
 
+# 抑制不同类别之间的高重叠检测，只保留置信度高的
 def suppress_multi_class_conflicts(boxes, scores, clses, iou_thr=0.6):
-    """抑制不同类别之间的高重叠检测（只保留置信度高的）"""
+    
     keep = []
     for i, bi in enumerate(boxes):
         conflict = False
@@ -106,9 +107,8 @@ def suppress_multi_class_conflicts(boxes, scores, clses, iou_thr=0.6):
     return boxes[keep], scores[keep], clses[keep]
 
 # ==============================
-# 🎨 可视化（含颜色图例）
+# 可视化
 # ==============================
-
 def class_color(cls_id):
     hue = (cls_id * 37) % 360 / 360.0
     r, g, b = colorsys.hsv_to_rgb(hue, 0.8, 1.0)
@@ -168,11 +168,10 @@ def draw_dets(img, boxes, scores, clses, names):
     return draw_legend(img, names)
 
 # ==============================
-# 🚀 主推理函数
+# 主函数
 # ==============================
-
 def run_inference():
-    print("🚀 开始多模型融合推理")
+    print("开始多模型融合推理")
     start = time.time()
     ensure_dir(OUT_DIR)
     vis_dir, lbl_dir = Path(OUT_DIR) / "vis", Path(OUT_DIR) / "labels"
@@ -235,17 +234,17 @@ def run_inference():
             fs = np.concatenate(fused_scores_all)
             fc = np.concatenate(fused_cls_all)
 
-            # 🚫 跨类重叠抑制
+            # 跨类重叠抑制
             fb, fs, fc = suppress_multi_class_conflicts(fb, fs, fc)
 
-            # 🧮 检查重叠框数量（便于分析）
+            # 检查重叠框数量
             overlaps = 0
             for i in range(len(fb)):
                 for j in range(i+1, len(fb)):
                     if iou_xyxy(fb[i], fb[j]) > 0.5:
                         overlaps += 1
             if overlaps > 0:
-                print(f"⚠️ {img_path.name} 出现 {overlaps} 个重叠框（可能为重复检测）")
+                print(f" {img_path.name} 出现 {overlaps} 个重叠框（可能为重复检测）")
 
 
         else:
@@ -269,15 +268,12 @@ def run_inference():
         if idx % 20 == 0:
             print(f"已完成 {idx}/{len(imgs)} 张")
 
-    print(f"\n✅ 推理完成，共检测 {total_det} 个目标，用时 {time.time()-start:.2f} 秒\n")
+    print(f"\n 推理完成，共检测 {total_det} 个目标，用时 {time.time()-start:.2f} 秒\n")
 
 # ==============================
-# 📊 自动计算精度与mAP
+# 自动计算精度与mAP
 # ==============================
-
 def compute_accuracy(gt_dir, pred_dir, iou_thr=0.5):
-    """自动计算 Precision / Recall / F1"""
-    import glob
     def iou(b1, b2):
         x1, y1, x2, y2 = max(b1[0], b2[0]), max(b1[1], b2[1]), min(b1[2], b2[2]), min(b1[3], b2[3])
         inter = max(0, x2 - x1) * max(0, y2 - y1)
@@ -311,23 +307,20 @@ def compute_accuracy(gt_dir, pred_dir, iou_thr=0.5):
             else: FP+=1
         FN += len(gt_boxes)-len(matched)
     prec = TP/(TP+FP+1e-6); rec=TP/(TP+FN+1e-6)
-    print(f"📈 Precision={prec:.3f}, Recall={rec:.3f}, F1={(2*prec*rec)/(prec+rec+1e-6):.3f}")
+    print(f"Precision={prec:.3f}, Recall={rec:.3f}, F1={(2*prec*rec)/(prec+rec+1e-6):.3f}")
 
 def evaluate_model():
     """调用YOLO自带验证（计算mAP）"""
-    print("\n📊 开始YOLO官方验证...")
+    print("\n 开始YOLO官方验证...")
     model = YOLO(MODEL_PATHS[0])
     res = model.val(data=DATA_YAML, imgsz=IMGSZ, device=DEVICE, split="test")
-    print(f"✅ mAP50={res.box.map50:.3f}, mAP50-95={res.box.map:.3f}\n")
+    print(f" mAP50={res.box.map50:.3f}, mAP50-95={res.box.map:.3f}\n")
 
     plot_combined_performance(res, save_path=os.path.join(OUT_DIR, "performance_combined.png"))
 
+# 绘制综合性能双子图（含平均虚线与高可读数值标注）
 def plot_combined_performance(results, save_path):
-    """
-    绘制综合性能双子图（含平均虚线与高可读数值标注）
-    专业论文级可视化：Times字体 + 白底标签 + 高清600dpi。
-    """
-    # ===== 数据提取 =====
+    # 数据提取
     names = results.names
     num_classes = len(names)
     class_names = [names[i] for i in range(num_classes)]
@@ -339,7 +332,6 @@ def plot_combined_performance(results, save_path):
 
     avg_p, avg_r, avg_map50, avg_map5095 = np.mean(p), np.mean(r), results.box.map50, results.box.map
 
-    # ===== 论文风格 =====
     plt.rcParams.update({
         "font.family": "Times New Roman",
         "font.size": 12,
@@ -411,12 +403,11 @@ def plot_combined_performance(results, save_path):
     plt.tight_layout()
     plt.savefig(save_path, dpi=600, bbox_inches="tight")
     plt.close()
-    print(f"📊 综合性能双子图（高可读平均标注版）已保存到: {save_path}")
+    print(f" 综合性能双子图（高可读平均标注版）已保存到: {save_path}")
 
 # ==============================
 # 主程序入口
 # ==============================
-
 if __name__ == "__main__":
     run_inference()
     compute_accuracy(
