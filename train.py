@@ -163,7 +163,7 @@ def main(args):
     except Exception as e:
         print("Prediction visualization skipped:", e)
 
-    print("All done ✅")
+    print("All done")
 
 # ------------------------
 # CLI 参数

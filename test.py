@@ -309,8 +309,9 @@ def compute_accuracy(gt_dir, pred_dir, iou_thr=0.5):
     prec = TP/(TP+FP+1e-6); rec=TP/(TP+FN+1e-6)
     print(f"Precision={prec:.3f}, Recall={rec:.3f}, F1={(2*prec*rec)/(prec+rec+1e-6):.3f}")
 
+# 调用YOLO自带验证，计算mAP
 def evaluate_model():
-    """调用YOLO自带验证（计算mAP）"""
+    
     print("\n 开始YOLO官方验证...")
     model = YOLO(MODEL_PATHS[0])
     res = model.val(data=DATA_YAML, imgsz=IMGSZ, device=DEVICE, split="test")
