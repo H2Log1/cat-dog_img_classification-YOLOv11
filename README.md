@@ -1,7 +1,7 @@
 # 基于 YOLOv11 的猫狗图像种类检测与分类
 
 ![Python](https://img.shields.io/badge/Python-3.12-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
+![License](https://img.shields.io/badge/License-MIT-green)
 
 本项目基于 **YOLOv11-L** 框架，构建了一个面向猫狗品种识别任务的完整训练与测试系统，支持多模型融合、推理增强（TTA）、性能自动计算与可视化输出。  
 通过自定义数据平衡与优化策略，实现了在多类别检测场景下的高精度与强鲁棒性。
